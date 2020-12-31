@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
+
 const t_cambio = sequelize.define('t_cambio',{
     FEC_CMB:{
         type: DataTypes.DATEONLY,
@@ -20,7 +21,7 @@ const t_cambio = sequelize.define('t_cambio',{
         allowNull: true,
     },
     FEC_USU:{
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     HOR_USU:{

@@ -1,24 +1,30 @@
 const router = require('express').Router();
-const { getLast5Days, getTipoCambio } = require('../controllers/tipoCambioCtrl');
-const { Op } = require('sequelize');
-// const TIPOCAMBIO = require('../models/tipoCambio');
+const { sequelize } = require('../config/db');
+const moment = require('moment');
+
+const { getLast5Days,
+    getTipoCambio,
+    setFecha,
+    setFechaNow,
+    setHoraActual
+} = require('../controllers/tipoCambioCtrl');
 const TIPOCAMBIO = require('../models/T_cambio');
 
 require('../config/db');
 
 
-router.get('/cloud/:id', async(req, res) =>{
-    
+router.get('/cloud/:id', async (req, res) => {
+
     const fecha = req.params.id;
     const cambio = await TIPOCAMBIO.findOne({
-        where:{
+        where: {
             FEC_CMB: fecha
         }
     });
 
-    if(!cambio){
+    if (!cambio) {
         return res.status(400).json({
-            error:'Fecha no encontrada'
+            error: 'Fecha no encontrada'
         });
     }
 
@@ -26,20 +32,18 @@ router.get('/cloud/:id', async(req, res) =>{
 })
 
 
-
-
 // Obtener tipo de cambio
 router.get('/dolares/:id', async (req, res) => {
 
     const fechaAnterior = getLast5Days(req.params.id);
     const tipoCambioDB = await TIPOCAMBIO.findOne({
+        attributes: ['FEC_CMB', 'TIP_CMB', 'TIP_CMBC'],
         where: {
-            fecha: (fechaAnterior[0]).toString()
+            FEC_CMB: setFecha(fechaAnterior[0])
         }
     });
 
     if (!tipoCambioDB) {
-
         const fecha = (req.params.id).toString();
         const arregloFechas = getLast5Days(fecha);
         if (!arregloFechas) {
@@ -57,19 +61,43 @@ router.get('/dolares/:id', async (req, res) => {
 
         const validarNuevaFecha = await TIPOCAMBIO.findOne({
             where: {
-                fecha: tipoCambio.fecha
+                FEC_CMB: setFecha(tipoCambio.fecha)
             }
         });
 
         if (!validarNuevaFecha) {
-            TIPOCAMBIO.create({
-                fecha: tipoCambio.fecha,
-                moneda: tipoCambio.moneda,
-                compra: tipoCambio.compra,
-                venta: tipoCambio.venta
-            });
+
+            const fechaFormatoDB = setFecha(tipoCambio.fecha);
+            const fechaHoyFormatDB = setFechaNow(new Date());
+            const horaFormatDB = setHoraActual(new Date());
+
+            const guardarFechaDB = await sequelize.query(`INSERT INTO T_cambio VALUES (
+                '${fechaFormatoDB}',
+                ${tipoCambio.venta},
+                ${tipoCambio.compra},
+                'SUPERVISOR',
+                '${fechaHoyFormatDB}',
+                '${horaFormatDB}',
+                0,0
+            )`);
+
+            // TIPOCAMBIO.create({
+            //     FEC_CMB: moment(`"${fechaFormatoDB}"`,  "YYYY-MM-DD"),
+            //     // moneda: tipoCambio.moneda,
+            //     TIP_CMB: Number(tipoCambio.venta),
+            //     TIP_CMBC: Number(tipoCambio.compra),
+            //     CDG_USU: 'SUPERVISOR',
+            //     FEC_USU: moment(`"${fechaHoyFormatDB}"`, "YYYY-MM-DD"),
+            //     HOR_USU: horaFormatDB,
+            //     TCV_VENTA: 0,
+            //     TCC_VENTA: 0
+            // });
         }
-        return res.json(tipoCambio);
+        return res.json({
+            FEC_CMB: setFecha(tipoCambio.fecha),
+            TIP_CMB: Number(tipoCambio.venta),
+            TIP_CMBC: Number(tipoCambio.compra),
+        });
     }
     res.json(tipoCambioDB);
 })

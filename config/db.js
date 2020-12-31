@@ -1,12 +1,13 @@
 const Sequelize = require('sequelize');
 const db = {};
 
+
 // Option 2: Passing parameters separately (other dialects)
 const sequelize = new Sequelize('DB_A671D0_richardnox', 'DB_A671D0_richardnox_admin', 'ASPDEMO2020',
   {
     host: 'sql5083.site4now.net',
     dialect: 'mssql',
-    // logging: false
+    logging: false,
     pool: {
       max: 5,
       min: 0,
