@@ -38,10 +38,10 @@ router.get('/dolares/:id', async (req, res) => {
     const formatoYYMMDD = setFecha(fechaAnterior[0]);
     const convertToDate = new Date(formatoYYMMDD);
     const diaSemana = convertToDate.getDay(); // Obtener dia de semana
-    let fechaActual; // 5=sabado y 6=domingo
-        if( diaSemana === 5 ){
+    let fechaActual; // 5=sabado y 6=domingo en local 0=domingo y 6=sabado en web
+        if( diaSemana === 6 ){
             fechaActual = fechaAnterior[1];
-        }else if ( diaSemana === 6 ){
+        }else if ( diaSemana === 0 ){
             fechaActual = fechaAnterior[2];
         }else{
             fechaActual = fechaAnterior[0]

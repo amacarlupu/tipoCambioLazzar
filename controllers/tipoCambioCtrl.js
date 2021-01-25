@@ -133,9 +133,9 @@ async function getTipoCambio(fecha) {
 
         if ( tipoCambio[i].moneda === undefined ) {
 
-            if( tipoCambio[i].diaSemana === 6 ){
+            if( tipoCambio[i].diaSemana === 0 ){
                 cambioActual = cambioActual[i+2];
-            }else if (tipoCambio[i].diaSemana === 5){
+            }else if (tipoCambio[i].diaSemana === 6){
                 cambioActual = cambioActual[i+1];
             }else{
                 cambioActual = tipoCambio[i + 1];
