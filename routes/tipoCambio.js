@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const { sequelize } = require('../config/db');
-const moment = require('moment');
 
 const { getLast5Days,
     getTipoCambio,
@@ -36,13 +35,27 @@ router.get('/cloud/:id', async (req, res) => {
 router.get('/dolares/:id', async (req, res) => {
 
     const fechaAnterior = getLast5Days(req.params.id);
+    const formatoYYMMDD = setFecha(fechaAnterior[0]);
+    const convertToDate = new Date(formatoYYMMDD);
+    const diaSemana = convertToDate.getDay(); // Obtener dia de semana
+    let fechaActual; // 5=sabado y 6=domingo
+        if( diaSemana === 5 ){
+            fechaActual = fechaAnterior[1];
+        }else if ( diaSemana === 6 ){
+            fechaActual = fechaAnterior[2];
+        }else{
+            fechaActual = fechaAnterior[0]
+        }
+        
     const tipoCambioDB = await TIPOCAMBIO.findOne({
         attributes: ['FEC_CMB', 'TIP_CMB', 'TIP_CMBC'],
         where: {
-            FEC_CMB: setFecha(fechaAnterior[0])
+            // FEC_CMB: setFecha(fechaAnterior[0])
+            FEC_CMB: setFecha(fechaActual)
         }
-    });
+    }); 
 
+    // Si no está en DB, hacer la búsqueda
     if (!tipoCambioDB) {
         const fecha = (req.params.id).toString();
         const arregloFechas = getLast5Days(fecha);
@@ -51,14 +64,12 @@ router.get('/dolares/:id', async (req, res) => {
                 message: 'Fecha no encontrada'
             });
         }
-
         const tipoCambio = await getTipoCambio(arregloFechas);
         if (!tipoCambio) {
             return res.status(400).json({
                 error: 'Tipo de cambio no encontrado'
             });
         }
-
         const validarNuevaFecha = await TIPOCAMBIO.findOne({
             where: {
                 FEC_CMB: setFecha(tipoCambio.fecha)
@@ -99,7 +110,7 @@ router.get('/dolares/:id', async (req, res) => {
             TIP_CMBC: Number(tipoCambio.compra),
         });
     }
-    res.json(tipoCambioDB);
+    res.json(tipoCambioDB); // devuelve si está en la base de datos
 })
 
 module.exports = router;

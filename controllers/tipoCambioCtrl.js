@@ -108,8 +108,8 @@ async function getTipoCambio(fecha) {
 
             const pruebas = {};
             const cambios = document.querySelectorAll('#ctl00_cphContent_rgTipoCambio_ctl00__0 td');
-            const fecha = document.querySelector('#ctl00_cphContent_lblFecha').innerText.split(' ');
-            pruebas.fecha = fecha[fecha.length - 1].toString();
+            const fecha = document.querySelector('#ctl00_cphContent_lblFecha').innerText.split(' '); //fecha de sbs,convierte a array
+            pruebas.fecha = fecha[fecha.length - 1].toString(); // Extrae la posicion con la fecha
 
             for (let i = 0; i < cambios.length; i++) {
                 pruebas.moneda = cambios[0].innerText;
@@ -122,10 +122,25 @@ async function getTipoCambio(fecha) {
     }
 
     await browser.close();
+
     let cambioActual;
     for (let i = 0; i < tipoCambio.length; i++) {
-        if (tipoCambio[i].moneda === undefined) {
-            cambioActual = tipoCambio[i + 1];
+        
+        // Crear campo dias de semana
+        const formatoYYMMDD = setFecha(tipoCambio[i].fecha);
+        const convertToDate = new Date(formatoYYMMDD);
+        tipoCambio[i].diaSemana = convertToDate.getDay();
+
+        if ( tipoCambio[i].moneda === undefined ) {
+
+            if( tipoCambio[i].diaSemana === 6 ){
+                cambioActual = cambioActual[i+2];
+            }else if (tipoCambio[i].diaSemana === 5){
+                cambioActual = cambioActual[i+1];
+            }else{
+                cambioActual = tipoCambio[i + 1];
+            }
+
         } else {
             cambioActual = tipoCambio[i];
             break;
